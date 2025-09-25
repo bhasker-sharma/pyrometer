@@ -11,7 +11,7 @@ here we will integrate the datbse sql lite with the software.
   |--device_cell.py
   |--settings.py
 
-
+.
 
 steps for building 
 10. Incremental Build Roadmap
