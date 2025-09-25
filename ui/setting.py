@@ -3,7 +3,7 @@ from PyQt5.QtWidgets import (
     QTableWidget, QTableWidgetItem, QHeaderView,
     QAbstractItemView, QMessageBox, QWidget, QCheckBox
 )
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QSize
 
 
 class DeviceSettingsDialog(QDialog):
@@ -21,9 +21,20 @@ class DeviceSettingsDialog(QDialog):
         self.table.setHorizontalHeaderLabels([
             "Device Name", "Device ID", "Baud Rate", "Enable/Disable", "Action"
         ])
-        self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+
+        header = self.table.horizontalHeader()
+
+        # 🔹 Device Name column stretches with window
+        header.setSectionResizeMode(0, QHeaderView.Stretch)
+
+        # 🔹 Other columns have fixed widths
+        self.table.setColumnWidth(1, 100)  # Device ID
+        self.table.setColumnWidth(2, 100)  # Baud Rate
+        self.table.setColumnWidth(3, 120)  # Enable/Disable
+        self.table.setColumnWidth(4, 80)   # Action
+
         self.table.setEditTriggers(QAbstractItemView.AllEditTriggers)
-        layout.addWidget(self.table)
+        layout.addWidget(self.table, stretch=1)
 
         # Add first row
         self.add_row()
@@ -47,29 +58,33 @@ class DeviceSettingsDialog(QDialog):
         self.table.setItem(row, 1, QTableWidgetItem(device_id))
         self.table.setItem(row, 2, QTableWidgetItem(baud))
 
-        # Enable/Disable checkbox (wrapped in QWidget for centering)
+        # Enable/Disable checkbox
         checkbox = QCheckBox()
         checkbox.setChecked(enabled)
-
         container = QWidget()
         layout = QHBoxLayout(container)
         layout.addWidget(checkbox)
         layout.setAlignment(Qt.AlignCenter)
         layout.setContentsMargins(0, 0, 0, 0)
-
         self.table.setCellWidget(row, 3, container)
 
-        # Action column (+ / -)
+        # Action column (+ / - small stacked buttons)
         btn_add = QPushButton("+")
+        btn_add.setFixedSize(QSize(20, 20))
+        btn_add.setStyleSheet("QPushButton { padding: 0; margin: 0; }")
         btn_add.clicked.connect(self.add_row)
 
         btn_remove = QPushButton("-")
+        btn_remove.setFixedSize(QSize(20, 20))
+        btn_remove.setStyleSheet("QPushButton { padding: 0; margin: 0; }")
         btn_remove.clicked.connect(lambda _, r=row: self.remove_row(r))
 
-        action_layout = QHBoxLayout()
+        action_layout = QVBoxLayout()
         action_layout.addWidget(btn_add)
         action_layout.addWidget(btn_remove)
+        action_layout.setAlignment(Qt.AlignCenter)
         action_layout.setContentsMargins(0, 0, 0, 0)
+        action_layout.setSpacing(2)
 
         action_widget = QWidget()
         action_widget.setLayout(action_layout)
@@ -87,7 +102,6 @@ class DeviceSettingsDialog(QDialog):
             device_id = self.table.item(r, 1).text()
             baud_rate = self.table.item(r, 2).text()
 
-            # Get checkbox inside the container widget
             container = self.table.cellWidget(r, 3)
             checkbox = container.findChild(QCheckBox) if container else None
             enabled = checkbox.isChecked() if checkbox else False
