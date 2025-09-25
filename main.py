@@ -1,15 +1,12 @@
 import sys
-from PyQt5.QtWidgets import (
-    QApplication, QWidget, QMainWindow, QSplitter, QVBoxLayout, 
-    QHBoxLayout, QPushButton, QFrame, QLabel, QGridLayout, QInputDialog,
-    QDialog, QFormLayout, QLineEdit, QDialogButtonBox
-)
-from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QApplication
+from ui.main_window import MainWindow
 
-
-
-if __name__ == "__main__":
+def main():
     app = QApplication(sys.argv)
-    window = PyrometerDashboard()
+    window = MainWindow()
     window.show()
     sys.exit(app.exec_())
+
+if __name__ == "__main__":
+    main()
