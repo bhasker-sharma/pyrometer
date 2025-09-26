@@ -66,6 +66,7 @@ class DeviceCell(QFrame):
         self.temp_label = QLabel("Temp")
         self.temp_label.setFont(QFont("Arial", 9, QFont.Bold))
         self.temp_label.setAlignment(Qt.AlignCenter)
+        self.temp_label.setStyleSheet("font-size: 28px; font-weight: bold;")
 
         # ---------- Row 4: Big Bold Temperature Value (takes max space) ----------
         self.temp_value = QLabel("-- °C")
