@@ -103,6 +103,11 @@ class DeviceSettingsDialog(QDialog):
             
                          
     def add_row(self, name="Device", device_id="1", baud="9600", enabled=True):
+        # ✅ Prevent more than 16 devices
+        if self.table.rowCount() >= 16:
+            QMessageBox.warning(self, "Limit Reached", 
+                                "You can configure a maximum of 16 devices.")
+            return
         row = self.table.rowCount()
         self.table.insertRow(row)
 

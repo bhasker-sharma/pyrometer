@@ -29,15 +29,15 @@ class MainWindow(QMainWindow):
 
         # Device grid
         self.device_grid = QGridLayout()
-        self.device_grid.setSpacing(10)
+        self.device_grid.setSpacing(5)
         self.devices = []
         self.max_devices = 16
-        self.main_layout.addLayout(self.device_grid, stretch=3)
+        self.main_layout.addLayout(self.device_grid, stretch=2)
 
         # Bottom placeholder
         self.bottom_label = QLabel("Bottom Section (Logs / Graphs etc.)")
         self.bottom_label.setAlignment(Qt.AlignCenter)
-        self.main_layout.addWidget(self.bottom_label, stretch=1)
+        self.main_layout.addWidget(self.bottom_label, stretch=2)
 
         self.load_devices()
         

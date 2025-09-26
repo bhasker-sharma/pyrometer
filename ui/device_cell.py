@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QFrame, QVBoxLayout, QLabel
+from PyQt5.QtWidgets import QFrame, QVBoxLayout, QLabel,QSizePolicy
 from PyQt5.QtCore import Qt
 
 class DeviceCell(QFrame):
@@ -22,7 +22,8 @@ class DeviceCell(QFrame):
     def init_ui(self):
         self.setFrameShape(QFrame.Box)
         self.setLineWidth(2)
-        self.setFixedSize(170, 110)
+        self.setMinimumSize(150, 100)
+        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
         layout = QVBoxLayout()
 
