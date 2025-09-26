@@ -1,9 +1,9 @@
 from PyQt5.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QPushButton,
     QTableWidget, QTableWidgetItem, QHeaderView,
-    QAbstractItemView, QMessageBox, QWidget, QCheckBox,QLabel, QComboBox
+    QAbstractItemView, QMessageBox, QWidget, QCheckBox, QLabel, QComboBox
 )
-from PyQt5.QtCore import Qt, QSize, QSize
+from PyQt5.QtCore import Qt, QSize
 from db.database import DeviceConfigDB
 
 
@@ -22,13 +22,11 @@ class DeviceSettingsDialog(QDialog):
         com_layout = QHBoxLayout()
         com_label = QLabel("COM Port:")
         self.combobox_comport = QComboBox()
-        # Example COM ports, you can populate dynamically if needed
         self.combobox_comport.addItems(["COM1", "COM2", "COM3", "COM4"])
         com_layout.addWidget(com_label)
         com_layout.addWidget(self.combobox_comport)
         com_layout.addStretch(1)
         layout.addLayout(com_layout)
-
 
         # Table
         self.table = QTableWidget()
@@ -36,30 +34,21 @@ class DeviceSettingsDialog(QDialog):
         self.table.setHorizontalHeaderLabels([
             "Device Name", "Device ID", "Baud Rate", "Enable/Disable", "Action"
         ])
-
         header = self.table.horizontalHeader()
         self.table.verticalHeader().setDefaultSectionSize(45)
-        
-        # Make all columns interactive for manual sizing
         header.setSectionResizeMode(QHeaderView.Interactive)
         self.table.horizontalHeader().setStretchLastSection(True)
 
-        # Set initial column widths as percentages of the table width
-        total_width = self.table.width() if self.table.width() > 0 else 700
-        col_widths = [
-            int(total_width * 0.30),  # Device Name (30%)
-            int(total_width * 0.15),  # Device ID (15%)
-            int(total_width * 0.15),  # Baud Rate (15%)
-            int(total_width * 0.20),  # Enable/Disable (20%)
-            int(total_width * 0.20),  # Action (20%)
-        ]
+        # Initial widths
+        total_width = 700
+        col_widths = [int(total_width * p) for p in [0.30, 0.15, 0.15, 0.20, 0.20]]
         for i, w in enumerate(col_widths):
             self.table.setColumnWidth(i, w)
 
         self.table.setEditTriggers(QAbstractItemView.AllEditTriggers)
         layout.addWidget(self.table, stretch=1)
 
-        # Add first row
+        # Load existing configs
         self.load_from_db()
 
         # Save/Cancel buttons
@@ -76,33 +65,28 @@ class DeviceSettingsDialog(QDialog):
     def resizeEvent(self, event):
         super().resizeEvent(event)
         total_width = self.table.viewport().width()
-        col_widths = [
-            int(total_width * 0.30),  # Device Name (30%)
-            int(total_width * 0.15),  # Device ID (15%)
-            int(total_width * 0.15),  # Baud Rate (15%)
-            int(total_width * 0.20),  # Enable/Disable (20%)
-            int(total_width * 0.20),  # Action (20%)
-        ]
+        col_widths = [int(total_width * p) for p in [0.30, 0.15, 0.15, 0.20, 0.20]]
         for i, w in enumerate(col_widths):
             self.table.setColumnWidth(i, w)
-         
-    def load_from_db(self):
-        """populate the settings table from db """
-        self.table.setRowCount(0)  # clear any old rows
 
+    def load_from_db(self):
+        """populate the settings table from db"""
+        self.table.setRowCount(0)
         configs = self.db.get_all()
-        if configs:  # if DB has data
+        if configs:
             for row in configs:
                 _, name, device_id, baud_rate, com_port, enabled = row
                 self.add_row(name, str(device_id), str(baud_rate), bool(enabled))
-            # Set COM port dropdown to the first row’s com_port
             self.combobox_comport.setCurrentText(configs[0][4])
         else:
-            # If no configs exist, show one default row
             self.add_row()
-            
-                         
+
     def add_row(self, name="Device", device_id="1", baud="9600", enabled=True):
+        # ✅ Block adding more than 16 rows
+        if self.table.rowCount() >= 16:
+            QMessageBox.warning(self, "Limit Reached", "You can configure up to 16 devices only.")
+            return
+
         row = self.table.rowCount()
         self.table.insertRow(row)
 
@@ -113,6 +97,7 @@ class DeviceSettingsDialog(QDialog):
         # Enable/Disable checkbox
         checkbox = QCheckBox()
         checkbox.setChecked(enabled)
+        checkbox.stateChanged.connect(self.on_checkbox_toggled)  # ✅ enforce limit
         container = QWidget()
         layout = QHBoxLayout(container)
         layout.addWidget(checkbox)
@@ -120,7 +105,7 @@ class DeviceSettingsDialog(QDialog):
         layout.setContentsMargins(0, 0, 0, 0)
         self.table.setCellWidget(row, 3, container)
 
-        # Action column (+ / - small stacked buttons)
+        # Action column
         btn_add = QPushButton("+")
         btn_add.setFixedSize(QSize(20, 20))
         btn_add.setStyleSheet("QPushButton { padding: 0; margin: 0; }")
@@ -146,13 +131,33 @@ class DeviceSettingsDialog(QDialog):
         if self.table.rowCount() > 1:
             self.table.removeRow(row)
 
+    def on_checkbox_toggled(self, state):
+        """Prevent enabling more than 16 devices"""
+        enabled_count = 0
+        for r in range(self.table.rowCount()):
+            container = self.table.cellWidget(r, 3)
+            checkbox = container.findChild(QCheckBox) if container else None
+            if checkbox and checkbox.isChecked():
+                enabled_count += 1
+
+        if enabled_count > 16:
+            sender = self.sender()
+            if isinstance(sender, QCheckBox):
+                sender.setChecked(False)
+            QMessageBox.warning(
+                self,
+                "Limit Exceeded",
+                "You can enable up to 16 devices only."
+            )
+
     def save(self):
         rows = self.table.rowCount()
         com_port = self.combobox_comport.currentText()
-        
+
         self.db.clear()
         self.configured_devices = []
-        
+        enabled_count = 0
+
         for r in range(rows):
             device_name = self.table.item(r, 0).text()
             device_id = int(self.table.item(r, 1).text())
@@ -161,6 +166,8 @@ class DeviceSettingsDialog(QDialog):
             container = self.table.cellWidget(r, 3)
             checkbox = container.findChild(QCheckBox) if container else None
             enabled = checkbox.isChecked() if checkbox else False
+            if enabled:
+                enabled_count += 1
 
             row_data = {
                 "Device Name": device_name,
@@ -172,6 +179,15 @@ class DeviceSettingsDialog(QDialog):
             self.configured_devices.append(row_data)
 
             self.db.add(device_name, device_id, baud_rate, com_port, enabled)
+
+        # ✅ final safeguard
+        if enabled_count > 16:
+            QMessageBox.warning(
+                self,
+                "Limit Exceeded",
+                "You can enable up to 16 devices only."
+            )
+            return
 
         QMessageBox.information(self, "Saved", "Device settings saved successfully!")
         self.accept()

@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QFrame, QVBoxLayout, QLabel
+from PyQt5.QtWidgets import QFrame, QVBoxLayout, QLabel, QSizePolicy
 from PyQt5.QtCore import Qt
 
 class DeviceCell(QFrame):
@@ -22,23 +22,25 @@ class DeviceCell(QFrame):
     def init_ui(self):
         self.setFrameShape(QFrame.Box)
         self.setLineWidth(2)
-        self.setFixedSize(170, 110)
+
+        # 🔹 Allow dynamic resizing
+        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
         layout = QVBoxLayout()
 
-        # Show Device Name (from DB)
+        # Show Device Name
         self.title = QLabel(self.device_name)
         self.title.setAlignment(Qt.AlignCenter)
 
-        # Show Device ID (from DB)
+        # Show Device ID
         self.id_label = QLabel(f"ID: {self.device_id}")
         self.id_label.setAlignment(Qt.AlignCenter)
 
-        # Show COM port & Baud (optional, useful for debugging)
+        # Show COM port & Baud
         self.port_label = QLabel(f"{self.com_port} | {self.baud_rate}")
         self.port_label.setAlignment(Qt.AlignCenter)
 
-        # Temperature placeholder (later updated from readings DB)
+        # Temperature placeholder
         self.temp_label = QLabel("Temp: -- °C")
         self.temp_label.setAlignment(Qt.AlignCenter)
 
