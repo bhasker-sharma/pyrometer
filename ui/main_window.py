@@ -5,6 +5,7 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtCore import Qt
 from ui.setting import DeviceSettingsDialog
 from ui.device_cell import DeviceCell
+from ui.graph_section import GraphSection
 
 
 class MainWindow(QMainWindow):
@@ -42,17 +43,9 @@ class MainWindow(QMainWindow):
         line.setFrameShadow(QFrame.Sunken)
         self.main_layout.addWidget(line)
 
-        # 🔹 Bottom section: Graph / Logs placeholder
-        self.bottom_widget = QWidget()
-        bottom_layout = QVBoxLayout(self.bottom_widget)
-
-        self.graph_label = QLabel("📈 Graph Section (to be implemented)")
-        self.graph_label.setAlignment(Qt.AlignCenter)
-        self.graph_label.setStyleSheet("font-size: 16px; color: #444;")
-
-        bottom_layout.addWidget(self.graph_label)
-        self.bottom_widget.setLayout(bottom_layout)
-        self.main_layout.addWidget(self.bottom_widget, stretch=4)
+        # 🔹 Bottom section: Graph / Logs (new widget)
+        self.bottom_widget = GraphSection()
+        self.main_layout.addWidget(self.bottom_widget, stretch=2)
 
         # Load devices from DB
         self.load_devices()
