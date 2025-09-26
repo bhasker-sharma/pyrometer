@@ -2,33 +2,53 @@ from PyQt5.QtWidgets import QFrame, QVBoxLayout, QLabel
 from PyQt5.QtCore import Qt
 
 class DeviceCell(QFrame):
-    """A single device cell showing temp, id, status."""
-    def __init__(self, device_id):
+    """A single device cell showing name, id, and temperature placeholder."""
+    def __init__(self, device_row):
+        """
+        device_row = (id, device_name, device_id, baud_rate, com_port, enabled)
+        """
         super().__init__()
-        self.device_id = device_id
+        (
+            self.db_id,
+            self.device_name,
+            self.device_id,
+            self.baud_rate,
+            self.com_port,
+            self.enabled
+        ) = device_row
+
         self.init_ui()
 
     def init_ui(self):
         self.setFrameShape(QFrame.Box)
         self.setLineWidth(2)
-        self.setFixedSize(150, 100)
+        self.setFixedSize(170, 110)
 
         layout = QVBoxLayout()
 
-        self.title = QLabel(f"Device {self.device_id}")
+        # Show Device Name (from DB)
+        self.title = QLabel(self.device_name)
         self.title.setAlignment(Qt.AlignCenter)
+
+        # Show Device ID (from DB)
+        self.id_label = QLabel(f"ID: {self.device_id}")
+        self.id_label.setAlignment(Qt.AlignCenter)
+
+        # Show COM port & Baud (optional, useful for debugging)
+        self.port_label = QLabel(f"{self.com_port} | {self.baud_rate}")
+        self.port_label.setAlignment(Qt.AlignCenter)
+
+        # Temperature placeholder (later updated from readings DB)
         self.temp_label = QLabel("Temp: -- °C")
         self.temp_label.setAlignment(Qt.AlignCenter)
-        self.status_label = QLabel("Status: --")
-        self.status_label.setAlignment(Qt.AlignCenter)
 
         layout.addWidget(self.title)
+        layout.addWidget(self.id_label)
+        layout.addWidget(self.port_label)
         layout.addWidget(self.temp_label)
-        layout.addWidget(self.status_label)
 
         self.setLayout(layout)
 
     def update_temp(self, value, status="OK"):
-        """Update temperature & status on the cell."""
+        """Update temperature (later with real readings)."""
         self.temp_label.setText(f"Temp: {value:.1f} °C")
-        self.status_label.setText(f"Status: {status}")

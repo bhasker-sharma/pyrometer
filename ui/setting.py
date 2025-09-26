@@ -4,14 +4,17 @@ from PyQt5.QtWidgets import (
     QAbstractItemView, QMessageBox, QWidget, QCheckBox,QLabel, QComboBox
 )
 from PyQt5.QtCore import Qt, QSize, QSize
+from db.database import DeviceConfigDB
 
 
 class DeviceSettingsDialog(QDialog):
     """Popup dialog for device settings"""
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, db: DeviceConfigDB = None):
         super().__init__(parent)
         self.setWindowTitle("Device Settings")
         self.setGeometry(150, 150, 700, 400)
+
+        self.db = db if db else DeviceConfigDB()
 
         layout = QVBoxLayout(self)
 
@@ -57,7 +60,7 @@ class DeviceSettingsDialog(QDialog):
         layout.addWidget(self.table, stretch=1)
 
         # Add first row
-        self.add_row()
+        self.load_from_db()
 
         # Save/Cancel buttons
         btn_layout = QHBoxLayout()
@@ -82,12 +85,28 @@ class DeviceSettingsDialog(QDialog):
         ]
         for i, w in enumerate(col_widths):
             self.table.setColumnWidth(i, w)
+         
+    def load_from_db(self):
+        """populate the settings table from db """
+        self.table.setRowCount(0)  # clear any old rows
+
+        configs = self.db.get_all()
+        if configs:  # if DB has data
+            for row in configs:
+                _, name, device_id, baud_rate, com_port, enabled = row
+                self.add_row(name, str(device_id), str(baud_rate), bool(enabled))
+            # Set COM port dropdown to the first row’s com_port
+            self.combobox_comport.setCurrentText(configs[0][4])
+        else:
+            # If no configs exist, show one default row
+            self.add_row()
             
+                         
     def add_row(self, name="Device", device_id="1", baud="9600", enabled=True):
         row = self.table.rowCount()
         self.table.insertRow(row)
 
-        self.table.setItem(row, 0, QTableWidgetItem(f"{name} {row+1}"))
+        self.table.setItem(row, 0, QTableWidgetItem(f"{name}"))
         self.table.setItem(row, 1, QTableWidgetItem(device_id))
         self.table.setItem(row, 2, QTableWidgetItem(baud))
 
@@ -129,11 +148,15 @@ class DeviceSettingsDialog(QDialog):
 
     def save(self):
         rows = self.table.rowCount()
+        com_port = self.combobox_comport.currentText()
+        
+        self.db.clear()
         self.configured_devices = []
+        
         for r in range(rows):
             device_name = self.table.item(r, 0).text()
-            device_id = self.table.item(r, 1).text()
-            baud_rate = self.table.item(r, 2).text()
+            device_id = int(self.table.item(r, 1).text())
+            baud_rate = int(self.table.item(r, 2).text())
 
             container = self.table.cellWidget(r, 3)
             checkbox = container.findChild(QCheckBox) if container else None
@@ -141,11 +164,14 @@ class DeviceSettingsDialog(QDialog):
 
             row_data = {
                 "Device Name": device_name,
-                "Device ID": int(device_id) if device_id.isdigit() else device_id,
+                "Device ID": device_id,
                 "Baud Rate": baud_rate,
+                "Com port": com_port,
                 "Enable/Disable": enabled
             }
             self.configured_devices.append(row_data)
+
+            self.db.add(device_name, device_id, baud_rate, com_port, enabled)
 
         QMessageBox.information(self, "Saved", "Device settings saved successfully!")
         self.accept()
