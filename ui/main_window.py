@@ -34,7 +34,7 @@ class MainWindow(QMainWindow):
 
         self.top_widget = QWidget()
         self.top_widget.setLayout(self.device_grid)
-        self.main_layout.addWidget(self.top_widget, stretch=3)
+        self.main_layout.addWidget(self.top_widget, stretch=2)
 
         # 🔹 Divider line
         line = QFrame()
@@ -52,7 +52,7 @@ class MainWindow(QMainWindow):
 
         bottom_layout.addWidget(self.graph_label)
         self.bottom_widget.setLayout(bottom_layout)
-        self.main_layout.addWidget(self.bottom_widget, stretch=3)
+        self.main_layout.addWidget(self.bottom_widget, stretch=4)
 
         # Load devices from DB
         self.load_devices()
@@ -128,6 +128,12 @@ class MainWindow(QMainWindow):
             cols += 1
         rows = (device_count + cols - 1) // cols  # ceil division
 
+        # ✅ Clear old stretches
+        for r in range(self.device_grid.rowCount()):
+            self.device_grid.setRowStretch(r, 0)
+        for c in range(self.device_grid.columnCount()):
+            self.device_grid.setColumnStretch(c, 0)
+
         # 🔹 Add cells into grid
         for i, row in enumerate(enabled_configs[:self.max_devices]):
             cell = DeviceCell(row)
@@ -137,7 +143,7 @@ class MainWindow(QMainWindow):
             c = i % cols
             self.device_grid.addWidget(cell, r, c)
 
-        # 🔹 Make each row/col expand equally
+        # 🔹 Make each row/col expand equally (fresh stretches)
         for r in range(rows):
             self.device_grid.setRowStretch(r, 1)
         for c in range(cols):
