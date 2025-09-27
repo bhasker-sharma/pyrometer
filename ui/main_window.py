@@ -40,8 +40,8 @@ class MainWindow(QMainWindow):
         line.setFrameShadow(QFrame.Sunken)
         self.main_layout.addWidget(line)
 
-        # 🔹 Bottom section: Graph / Logs (new widget)
-        self.bottom_widget = GraphSection()
+        # 🔹 Bottom section: Graph / Logs (with device table)
+        self.bottom_widget = GraphSection(config_db=self.config_db)
         self.main_layout.addWidget(self.bottom_widget, stretch=2)
 
         # Load devices from DB
@@ -108,6 +108,9 @@ class MainWindow(QMainWindow):
             layout.addWidget(btn_add)
 
             self.device_grid.addWidget(self.no_device_widget, 0, 0, 1, 1)
+
+            # Also clear table in bottom widget
+            self.bottom_widget.load_enabled_devices()
             return
 
         device_count = len(enabled_configs)
@@ -138,3 +141,6 @@ class MainWindow(QMainWindow):
             self.device_grid.setRowStretch(r, 1)
         for c in range(cols):
             self.device_grid.setColumnStretch(c, 1)
+
+        # 🔄 Refresh the device table in GraphSection
+        self.bottom_widget.load_enabled_devices()

@@ -82,6 +82,15 @@ class DeviceSettingsDialog(QDialog):
             self.add_row()
 
     def add_row(self, name="Device", device_id="1", baud="9600", enabled=True):
+        """Add a new row, limit total rows to 16"""
+        if self.table.rowCount() >= 16:
+            QMessageBox.warning(
+                self,
+                "Limit Reached",
+                "You can only configure up to 16 devices."
+            )
+            return
+
         row = self.table.rowCount()
         self.table.insertRow(row)
 
@@ -92,7 +101,7 @@ class DeviceSettingsDialog(QDialog):
         # Enable/Disable checkbox
         checkbox = QCheckBox()
         checkbox.setChecked(enabled)
-        checkbox.stateChanged.connect(self.on_checkbox_toggled)  # ✅ enforce limit
+        checkbox.stateChanged.connect(self.on_checkbox_toggled)  # ✅ enforce enable limit
         container = QWidget()
         layout = QHBoxLayout(container)
         layout.addWidget(checkbox)
