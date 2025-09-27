@@ -1,6 +1,6 @@
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QLabel, QFrame, QHBoxLayout,
-    QTableWidget, QTableWidgetItem, QCheckBox, QAbstractItemView, QHeaderView
+    QTableWidget, QTableWidgetItem, QAbstractItemView, QHeaderView
 )
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPixmap, QPainter, QColor, QIcon
@@ -49,9 +49,14 @@ class GraphSection(QWidget):
         self.table = QTableWidget()
         self.table.setColumnCount(3)
         self.table.setHorizontalHeaderLabels(["Device", "Check", "Colour"])
-        self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         self.table.setEditTriggers(QAbstractItemView.NoEditTriggers)  # prevent direct typing
         left_layout.addWidget(self.table)
+
+        # ✅ Column resize policy
+        header = self.table.horizontalHeader()
+        header.setSectionResizeMode(0, QHeaderView.Stretch)           # Device stretches
+        header.setSectionResizeMode(1, QHeaderView.ResizeToContents)  # Check fits
+        header.setSectionResizeMode(2, QHeaderView.ResizeToContents)  # Colour fits
 
         # 🔹 Divider line
         divider = QFrame()
@@ -69,9 +74,9 @@ class GraphSection(QWidget):
         right_layout.addWidget(QLabel("📈 Graph Display"))
 
         # Add to layout with stretch factors
-        main_layout.addWidget(self.left_panel, stretch=3)   # 30%
+        main_layout.addWidget(self.left_panel, stretch=2)   # 30%
         main_layout.addWidget(divider)
-        main_layout.addWidget(self.right_panel, stretch=7)  # 70%
+        main_layout.addWidget(self.right_panel, stretch=8)  # 70%
 
         self.setLayout(main_layout)
 
@@ -86,23 +91,32 @@ class GraphSection(QWidget):
         self.table.setRowCount(0)  # clear existing
 
         # Predefined colors (cycle if > available)
-        colors = ["red", "blue", "green", "orange", "purple", "brown", "pink", "cyan"]
+        colors = [
+            "red", "blue", "green", "orange",
+            "purple", "brown", "pink", "cyan",
+            "magenta", "teal", "lime", "indigo",
+            "gold", "coral", "navy", "darkgreen"
+        ]
 
         for i, row in enumerate(enabled_configs):
             _, name, device_id, baud_rate, com_port, enabled = row
             self.table.insertRow(i)
 
-            # Device name
+            # 🔹 Device name (centered)
             item_device = QTableWidgetItem(name)
+            item_device.setTextAlignment(Qt.AlignCenter)
             self.table.setItem(i, 0, item_device)
 
-            # Checkbox for "Check"
-            checkbox = QCheckBox()
-            checkbox.setChecked(False)
-            self.table.setCellWidget(i, 1, checkbox)
+            # 🔹 Native checkbox (centered, no ghost square)
+            check_item = QTableWidgetItem()
+            check_item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
+            check_item.setCheckState(Qt.Unchecked)
+            check_item.setTextAlignment(Qt.AlignCenter)
+            self.table.setItem(i, 1, check_item)
 
-            # Colour column (dot + label)
+            # 🔹 Colour column (dot + text, centered)
             color = colors[i % len(colors)]
             dot_item = QTableWidgetItem(color.capitalize())
-            dot_item.setIcon(QIcon(make_color_dot(color)))  # ✅ fixed: wrap pixmap in QIcon
+            dot_item.setIcon(QIcon(make_color_dot(color)))
+            dot_item.setTextAlignment(Qt.AlignCenter)
             self.table.setItem(i, 2, dot_item)
